@@ -45,7 +45,7 @@ public class ClientController : MonoBehaviour
             if (!isGoingToBuy && Random.value < 0.5f && buyPoint != null && pointsVisited < pointsToVisit - 1)
             {
                 currentTarget = buyPoint;
-                waitTime = 5f;
+                waitTime = 30f;
                 isGoingToBuy = true;
                 pointsVisited++;
             }

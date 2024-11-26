@@ -15,6 +15,7 @@ public class OrderController : MonoBehaviour
     {
         socketBox = GetComponent<XRSocketInteractor>();
         socketBox.selectEntered.AddListener(OnBoxOnSocket);
+        client = FindObjectOfType<ClientController>();
     }
 
     void Update()
@@ -26,7 +27,7 @@ public class OrderController : MonoBehaviour
         if (args.interactableObject.transform.CompareTag(boxTag))
         {
             Debug.Log("Caja en socket");
-            {
+            
 
                 if (args.interactableObject.transform.CompareTag(boxTag))
                 {
@@ -42,7 +43,7 @@ public class OrderController : MonoBehaviour
                         Destroy(contentSocket);
                     }
                 }
-            }
+            
         }
     }
 }
