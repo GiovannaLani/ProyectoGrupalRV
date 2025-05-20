@@ -127972,6 +127972,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1640030726}
+    - targetCorrespondingSourceObject: {fileID: 3977197974065273168, guid: e2698219e3231e94c8765d49b9dd5cff,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1640030727}
     - targetCorrespondingSourceObject: {fileID: 1664580262361020631, guid: e2698219e3231e94c8765d49b9dd5cff,
         type: 3}
       insertIndex: -1
@@ -128040,7 +128044,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1640030725}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cc4e7b5f4d14854fb936905bf3de599, type: 3}
   m_Name: 
@@ -128060,6 +128064,33 @@ MonoBehaviour:
   orderController: {fileID: 887972961}
   clientManager: {fileID: 0}
   weaponController: {fileID: 1529240543}
+--- !u!114 &1640030727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640030725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c10a2321f2b7fc4b8f9a4cf0b35e7e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  infoPanel: {fileID: 1640030724}
+  descriptionText: {fileID: 2060573305}
+  orderText: {fileID: 1888573769}
+  textCash: {fileID: 326769769}
+  textWeapon: {fileID: 1039996023}
+  repairButton: {fileID: 249211435}
+  repairMessage: {fileID: 899533927}
+  repairSlider: {fileID: 1668694769}
+  repairSliderFillImage: {fileID: 600216806}
+  boxButton: {fileID: 2043905336}
+  textBox: {fileID: 1699632867}
+  boxBuyController: {fileID: 2043905339}
+  orderController: {fileID: 887972961}
+  clientManager: {fileID: 1758902392}
+  weaponController: {fileID: 1529240560}
 --- !u!1 &1640435334
 GameObject:
   m_ObjectHideFlags: 0
