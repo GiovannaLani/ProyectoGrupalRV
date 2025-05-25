@@ -153,20 +153,22 @@ public class PlayerHandControllerMP : NetworkBehaviour
     private bool TryHideShowWeapon(ref GameObject handItem, ref GameObject storedWeapon, XRDirectInteractor handInteractor)
     {
         // Si hay un arma en la mano, ocultarla
-        if (handItem != null && handItem.TryGetComponent<WeaponControllerMP>(out _))
+        if (handItem != null && handItem.TryGetComponent<WeaponControllerMP>(out var weapon))
         {
             storedWeapon = handItem;
-            handItem.SetActive(false);
+            weapon.SetWeaponVisibleServerRpc(false); // << usar esta línea
             handItem = null;
             return true;
         }
 
         // Si no hay nada en la mano pero hay un arma guardada, mostrarla
-        if (handItem == null && storedWeapon != null)
+        if (handItem == null && storedWeapon != null && storedWeapon.TryGetComponent<WeaponControllerMP>(out var storedWeaponController))
         {
             storedWeapon.transform.position = handInteractor.transform.position;
             storedWeapon.transform.rotation = handInteractor.transform.rotation;
-            storedWeapon.SetActive(true);
+
+            storedWeaponController.SetWeaponVisibleServerRpc(true); // << usar esta línea
+
             StartCoroutine(ForceGrabWeapon(storedWeapon, handInteractor));
             handItem = storedWeapon;
             storedWeapon = null;

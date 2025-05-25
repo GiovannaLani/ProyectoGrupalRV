@@ -230,4 +230,17 @@ public class WeaponControllerMP : NetworkBehaviour
         if (durability < 0)
             durability = 0;
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetWeaponVisibleServerRpc(bool visible)
+    {
+        SetWeaponVisibleClientRpc(visible);
+    }
+
+    [ClientRpc]
+    private void SetWeaponVisibleClientRpc(bool visible)
+    {
+        Debug.Log($" SetActive({visible}) en cliente {NetworkManager.Singleton.LocalClientId}");
+        gameObject.SetActive(visible);
+    }
 }
