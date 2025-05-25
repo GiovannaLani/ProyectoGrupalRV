@@ -1,0 +1,129 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using Unity.Netcode;
+
+public class BoxControllerMP : NetworkBehaviour
+{
+    public NetworkedSocket socketLid;
+    public NetworkedSocket socketContent;
+    private MafiaControllerMP mafiaController;
+    private bool hasLid = false;
+    private bool hasContent = false;
+    public bool hasClothes = false;
+    public string lidTag = "Lid";
+    public string clothesTag = "Clothes";
+    public float scaleDuration = 0.2f;
+    public Vector3 targetScale = new Vector3(0.6f, 0.6f, 0.6f);
+
+    public List<string> containedItems = new List<string>();
+
+
+    void Start()
+    {
+        if (socketLid == null || socketContent == null)
+        {
+            Debug.LogError("Socket references are not assigned in the Inspector.");
+            return;
+        }
+        mafiaController = FindObjectOfType<MafiaControllerMP>();
+
+        socketLid.onSocketEnter.AddListener(ObjectOnSocket);
+        socketLid.onSocketExit.AddListener(ObjectOutSocket);
+        socketContent.onSocketEnter.AddListener(ObjectOnSocket);
+        socketContent.onSocketExit.AddListener(ObjectOutSocketContent);
+
+
+    }
+
+
+    private void ObjectOnSocket(GameObject placedObject)
+    {
+        if (placedObject.CompareTag(lidTag))
+        {
+            Debug.Log("Se ha colocado la tapa");
+            hasLid = true;
+            if (!hasContent)
+            {
+                socketContent.allowSocket = false;
+            }
+        }
+        else if (placedObject.CompareTag(clothesTag))
+        {
+            containedItems.Add(clothesTag);
+            Debug.Log("Se ha colocado ropa");
+            hasContent = true;
+            hasClothes = true;
+        }
+        else if (IsBodyPart(placedObject.tag))
+        {
+            placedObject.transform.localScale = targetScale;
+
+            containedItems.Add(placedObject.tag);
+            Debug.Log($"Se ha colocado parte del cuerpo: {placedObject.name}");
+            hasContent = true;
+
+            if (mafiaController != null)
+            {
+                string order = mafiaController.getGeneratedOrder();
+                if (placedObject.CompareTag(order))
+                {
+                    Debug.Log("Parte del cuerpo coincide con el pedido.");
+                }
+            }
+        }
+
+    }
+    public void ObjectOutSocket(GameObject placedObject)
+    {
+        Debug.Log("quitada tapa");
+        hasLid = false;
+        if (!hasContent)
+        {
+            socketContent.allowSocket = true;
+        }
+    }
+
+    public void ObjectOutSocketContent(GameObject placedObject)
+    {
+
+        Debug.Log("quitada parte cuerpo");
+        if (IsBodyPart(placedObject.tag))
+        {
+            placedObject.transform.localScale = Vector3.one;
+        }
+
+    }
+
+    private bool IsBodyPart(string tag)
+    {
+        string[] bodyPartTags = { "Torso", "Cabeza", "Pierna", "Brazo", "Podrido" };
+        foreach (string bodyPartTag in bodyPartTags)
+        {
+            if (tag.Equals(bodyPartTag))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool ContainsBodyPart()
+    {
+        foreach (string item in containedItems)
+        {
+            if (IsBodyPart(item))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsReadyForDelivery()
+    {
+        return hasLid && hasContent;
+    }
+
+}

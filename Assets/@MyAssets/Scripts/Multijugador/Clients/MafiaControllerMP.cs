@@ -28,7 +28,6 @@ public class MafiaControllerMP : PersonControllerMP
             string[] bodyParts = { "Torso", "Cabeza", "Pierna", "Brazo" };
             string selectedPart = bodyParts[Random.Range(0, bodyParts.Length)];
             orderDescription = selectedPart + "";
-            Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
             Debug.Log("Pedido del mafioso: " + orderDescription);
 
             OrderClientRpc(orderDescription);

@@ -45,7 +45,6 @@ public class ClientAI : MonoBehaviour
     public void OnDetected(GameObject target)
     {
         ClientController clientController = GetComponent<ClientController>();
-        Debug.Log("detectado "+target.name);
         if (clientController != null)
         {
             if (!clientController.isAlive)

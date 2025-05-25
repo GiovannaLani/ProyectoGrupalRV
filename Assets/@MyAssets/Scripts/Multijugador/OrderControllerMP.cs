@@ -1,0 +1,110 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.XR.Interaction.Toolkit;
+using Unity.Netcode;
+
+public class OrderControllerMP : NetworkBehaviour
+{
+    private XRSocketInteractor socketBox;
+    private ClientControllerMP client;
+    private MafiaControllerMP mafia;
+    private BoxControllerMP boxController;
+    private BuyPointControllerMP buyPointController;
+    public int cash = 0;
+    public string boxTag = "Box";
+
+    public GameObject counterPosition;
+    public AudioSource audioSource;
+
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        socketBox = GetComponent<XRSocketInteractor>();
+        socketBox.selectEntered.AddListener(OnBoxOnSocket);
+        client = FindObjectOfType<ClientControllerMP>();
+        mafia = FindObjectOfType<MafiaControllerMP>();
+        boxController = FindObjectOfType<BoxControllerMP>();
+        buyPointController = FindObjectOfType<BuyPointControllerMP>();
+    }
+
+    private void OnBoxOnSocket(SelectEnterEventArgs args)
+    {
+        if (args.interactableObject.transform.CompareTag(boxTag))
+        {
+            Debug.Log("Caja en socket");
+            boxController = args.interactableObject.transform.GetComponent<BoxControllerMP>();
+            Debug.Log(buyPointController.IsOccupied() + "    " + boxController.IsReadyForDelivery());
+            if (buyPointController.IsOccupied() && boxController.IsReadyForDelivery())
+            {
+                PersonControllerMP currentCustomer = buyPointController.currentCustomer;
+                if (currentCustomer is ClientControllerMP)
+                {
+                    Debug.Log("cleinte");
+                    ClientOrder(args, currentCustomer);
+                }
+                else if (currentCustomer is MafiaControllerMP)
+                {
+                    Debug.Log("mafia");
+                    MafiaOrder(args, currentCustomer);
+                }
+            }
+        }
+    }
+
+
+    private void ClientOrder(SelectEnterEventArgs args, PersonControllerMP client)
+    {
+        ClientControllerMP client1 = buyPointController.currentCustomer as ClientControllerMP;
+        if (boxController.hasClothes)
+        {
+            audioSource.Play();
+            DestroyOrder(args);
+            client.served = true;
+
+            Debug.Log("Pedido correcto. Se entrega al cliente");
+            AddCash();
+        }
+        else if (boxController.ContainsBodyPart())
+        {
+            client1.ReportDeath();
+        }
+
+    }
+    private void MafiaOrder(SelectEnterEventArgs args, PersonControllerMP client)
+    {
+        MafiaControllerMP mafia = buyPointController.currentCustomer as MafiaControllerMP;
+        string requiredItem = mafia.getGeneratedOrder();
+
+        if (boxController.containedItems.Contains(requiredItem))
+        {
+            audioSource.Play();
+            Debug.Log("Pedido correcto. Se entrega al mafioso");
+            client.served = true;
+            DestroyOrder(args);
+        }
+        else
+        {
+
+            StartCoroutine(mafia.HandleAttackSequence());
+        }
+
+    }
+
+
+    private void DestroyOrder(SelectEnterEventArgs args)
+    {
+        var lidSocket = boxController.socketLid.currentObj;
+        var contentSocket = boxController.socketContent.currentObj;
+        Destroy(args.interactableObject.transform.gameObject);
+        Destroy(lidSocket);
+        Destroy(contentSocket);
+
+    }
+
+    private int AddCash()
+    {
+        return cash += 10;
+    }
+}
