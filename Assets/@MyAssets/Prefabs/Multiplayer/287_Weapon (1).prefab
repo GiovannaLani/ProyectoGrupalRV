@@ -704,10 +704,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   audioSource: {fileID: 7319291717156156767}
-  runtimePartContainerPrefab: {fileID: 8147290267244736036, guid: 2d2a0fee6f052f74dbdaebf2d2acde8e,
-    type: 3}
-  partPrefab: {fileID: 8147290267244736036, guid: 8529111fc474742408ab161142371968,
-    type: 3}
   dynamicContainerPrefab: {fileID: 8780882121640730652, guid: 0a00c61031aec8e46b5b1b701b5339de,
     type: 3}
 --- !u!114 &5708537279706811297

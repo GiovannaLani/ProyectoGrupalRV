@@ -1,8 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+
 
 public class WeaponControllerMP : NetworkBehaviour
 {
@@ -15,46 +15,48 @@ public class WeaponControllerMP : NetworkBehaviour
     [Header("Weapon State")]
     public bool isSpawnedWeapon = false;
 
-    // Network Variables
-    public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(false,
+    // Estado de agarre sincronizado
+    public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(
+        false,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner);
 
-    public NetworkVariable<int> currentDurability = new NetworkVariable<int>(10,
+    // Durabilidad sincronizada
+    public NetworkVariable<int> currentDurability = new NetworkVariable<int>(
+        10,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner);
 
-    // Components
+    // Componentes
     private Renderer weaponRenderer;
     private XRGrabInteractable grabInteractable;
+
+    #region Unity Lifecycle
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
-        // Inicializar componentes
         weaponRenderer = GetComponent<Renderer>();
         grabInteractable = GetComponent<XRGrabInteractable>();
 
-        // Configurar valores iniciales solo en el servidor
         if (IsServer)
         {
             currentDurability.Value = durability;
             isGrabbed.Value = false;
         }
 
-        // Suscribirse a cambios en las variables de red
+        // Suscribirse a eventos de red
         currentDurability.OnValueChanged += OnDurabilityChanged;
         isGrabbed.OnValueChanged += OnGrabbedChanged;
 
-        // Configurar eventos de interacción solo para el propietario
+        // Eventos locales de agarre (solo si es Owner)
         if (IsOwner && grabInteractable != null)
         {
             grabInteractable.selectEntered.AddListener(OnWeaponGrabbed);
             grabInteractable.selectExited.AddListener(OnWeaponReleased);
         }
 
-        // Aplicar estado inicial
         UpdateWeaponAppearance();
     }
 
@@ -62,7 +64,6 @@ public class WeaponControllerMP : NetworkBehaviour
     {
         base.OnNetworkDespawn();
 
-        // Limpiar suscripciones
         currentDurability.OnValueChanged -= OnDurabilityChanged;
         isGrabbed.OnValueChanged -= OnGrabbedChanged;
 
@@ -73,25 +74,33 @@ public class WeaponControllerMP : NetworkBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        durability = Mathf.Clamp(durability, 0, maxDurability);
+    }
+
+    #endregion
+
     #region Interaction Events
+
     private void OnWeaponGrabbed(SelectEnterEventArgs args)
     {
         if (!IsOwner) return;
-
         SetGrabbedStateServerRpc(true);
-        Debug.Log($"Weapon grabbed by {OwnerClientId}");
+        Debug.Log($" Weapon grabbed by client {OwnerClientId}");
     }
 
     private void OnWeaponReleased(SelectExitEventArgs args)
     {
         if (!IsOwner) return;
-
         SetGrabbedStateServerRpc(false);
-        Debug.Log($"Weapon released by {OwnerClientId}");
+        Debug.Log($"Weapon released by client {OwnerClientId}");
     }
+
     #endregion
 
     #region Network RPCs
+
     [ServerRpc(RequireOwnership = false)]
     public void SetGrabbedStateServerRpc(bool grabbed)
     {
@@ -104,9 +113,7 @@ public class WeaponControllerMP : NetworkBehaviour
         currentDurability.Value = Mathf.Clamp(newDurability, 0, maxDurability);
 
         if (currentDurability.Value <= 0)
-        {
             OnWeaponBrokenClientRpc();
-        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -129,27 +136,43 @@ public class WeaponControllerMP : NetworkBehaviour
         Debug.Log("Weapon has been repaired!");
         UpdateWeaponAppearance();
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ToggleVisibilityServerRpc(bool visible)
+    {
+        ToggleVisibilityClientRpc(visible);
+    }
+
+    [ClientRpc]
+    private void ToggleVisibilityClientRpc(bool visible)
+    {
+        Debug.Log($"Visibilidad cambiada a {(visible ? "ACTIVO" : "OCULTO")} en cliente {NetworkManager.Singleton.LocalClientId}");
+        gameObject.SetActive(visible);
+    }
+
     #endregion
 
     #region Network Variable Callbacks
+
     private void OnDurabilityChanged(int previousValue, int newValue)
     {
-        Debug.Log($"Weapon durability changed from {previousValue} to {newValue}");
+        Debug.Log($"Durabilidad cambió de {previousValue} a {newValue}");
         UpdateWeaponAppearance();
     }
 
     private void OnGrabbedChanged(bool previousValue, bool newValue)
     {
-        Debug.Log($"Weapon grabbed state changed from {previousValue} to {newValue}");
-        // Aquí puedes agregar efectos visuales o de sonido cuando el arma es agarrada/soltada
+        Debug.Log($"Estado de agarre cambió de {previousValue} a {newValue}");
+        // Aquí puedes poner efectos de sonido, vibración, etc.
     }
+
     #endregion
 
     #region Public Methods
+
     public void ReduceDurability(int amount = 1)
     {
         if (!IsServer) return;
-
         int newDurability = Mathf.Max(0, currentDurability.Value - amount);
         SetDurabilityServerRpc(newDurability);
     }
@@ -157,90 +180,43 @@ public class WeaponControllerMP : NetworkBehaviour
     public void RepairKnife()
     {
         if (!IsServer) return;
-
         RepairWeaponServerRpc();
     }
 
-    public bool CanUse()
-    {
-        return currentDurability.Value > 0;
-    }
+    public bool CanUse() => currentDurability.Value > 0;
+    public bool IsWeaponGrabbed() => isGrabbed.Value;
+    public int GetCurrentDurability() => currentDurability.Value;
+    public int GetMaxDurability() => maxDurability;
+    public int GetRepairCost() => repairCost;
 
-    public bool IsWeaponGrabbed()
-    {
-        return isGrabbed.Value;
-    }
-
-    public int GetCurrentDurability()
-    {
-        return currentDurability.Value;
-    }
-
-    public int GetMaxDurability()
-    {
-        return maxDurability;
-    }
-
-    public int GetRepairCost()
-    {
-        return repairCost;
-    }
     #endregion
 
-    #region Collider Control
-    public void setColliderTrigger(bool isTrigger)
+    #region Collider and Visual Updates
+
+    public void SetColliderTrigger(bool isTrigger)
     {
-        Collider weaponCollider = GetComponent<Collider>();
-        if (weaponCollider != null)
+        if (TryGetComponent(out Collider weaponCollider))
         {
             weaponCollider.isTrigger = isTrigger;
         }
     }
-    #endregion
 
-    #region Visual Updates
     private void UpdateWeaponAppearance()
     {
         if (weaponRenderer == null || knifeMaterial == null) return;
 
-        // Cambiar apariencia basada en la durabilidad
         if (currentDurability.Value <= 0)
         {
-            // Arma rota - más opaca o diferente color
-            Color brokenColor = Color.red;
-            brokenColor.a = 0.5f;
+            Color brokenColor = new Color(1f, 0f, 0f, 0.5f); // rojo con transparencia
             weaponRenderer.material.color = brokenColor;
         }
         else
         {
-            // Arma funcional - color normal
             float durabilityPercent = (float)currentDurability.Value / maxDurability;
             Color normalColor = Color.Lerp(Color.yellow, Color.white, durabilityPercent);
             weaponRenderer.material.color = normalColor;
         }
     }
+
     #endregion
-
-    private void OnValidate()
-    {
-        // Asegurar que los valores sean válidos en el editor
-        if (durability > maxDurability)
-            durability = maxDurability;
-
-        if (durability < 0)
-            durability = 0;
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void SetWeaponVisibleServerRpc(bool visible)
-    {
-        SetWeaponVisibleClientRpc(visible);
-    }
-
-    [ClientRpc]
-    private void SetWeaponVisibleClientRpc(bool visible)
-    {
-        Debug.Log($" SetActive({visible}) en cliente {NetworkManager.Singleton.LocalClientId}");
-        gameObject.SetActive(visible);
-    }
 }
