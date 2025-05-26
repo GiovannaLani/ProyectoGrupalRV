@@ -101,7 +101,7 @@ public class InfoUIMP : NetworkBehaviour
 
     public void UpdateWeaponInfo()
     {
-        int value = weaponController.currentDurability;
+        int value = weaponController.durability;
         textWeapon.text = $"Durabilidad del cuchillo (max " + weaponController.maxDurability + "): " + value;
         repairSlider.value = (float)value / (float)weaponController.maxDurability;
         Debug.Log("durab: " + (float)value / (float)weaponController.maxDurability);
@@ -113,9 +113,9 @@ public class InfoUIMP : NetworkBehaviour
     {
         if (repairButton != null)
         {
-            bool canRepair = weaponController.currentDurability <= 0 && orderController.cash >= weaponController.repairCost;
+            bool canRepair = weaponController.durability <= 0 && orderController.cash >= weaponController.repairCost;
             repairButton.interactable = canRepair;
-            Debug.Log("es reparable " + canRepair + "   " + (weaponController.currentDurability <= 0) + "    " + (orderController.cash >= weaponController.repairCost));
+            Debug.Log("es reparable " + canRepair + "   " + (weaponController.durability <= 0) + "    " + (orderController.cash >= weaponController.repairCost));
 
             if (!canRepair)
             {
@@ -126,7 +126,7 @@ public class InfoUIMP : NetworkBehaviour
                 HideRepairMessage();
             }
 
-            if (weaponController.currentDurability > 0)
+            if (weaponController.durability > 0)
             {
                 ShowRepairMessage("Tu arma todavía no necesita reparación.");
             }

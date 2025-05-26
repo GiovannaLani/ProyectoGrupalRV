@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.SceneManagement;
 using Unity.Netcode;
 
 public class PlayerHandControllerMP : NetworkBehaviour
 {
+    [Header("Hand Interactors")]
     public XRDirectInteractor leftHandInteractor;
     public XRDirectInteractor rightHandInteractor;
 
+    [Header("Input Actions")]
+    private PlayerControls playerControls;
+
+    // Objetos actualmente en las manos
     private GameObject leftHandItem;
     private GameObject rightHandItem;
 
-    private PlayerControls playerControls;
-
+    // Armas ocultas temporalmente
     private GameObject weaponRight;
     private GameObject weaponLeft;
 
@@ -25,136 +28,197 @@ public class PlayerHandControllerMP : NetworkBehaviour
         playerControls = new PlayerControls();
     }
 
-    private void Start()
+    public override void OnNetworkSpawn()
     {
-        leftHandInteractor.selectEntered.AddListener(OnLeftHandSelect);
-        leftHandInteractor.selectExited.AddListener(OnLeftHandDeselect);
+        base.OnNetworkSpawn();
 
-        rightHandInteractor.selectEntered.AddListener(OnRightHandSelect);
-        rightHandInteractor.selectExited.AddListener(OnRightHandDeselect);
+        Debug.Log("AA: on network spawn");
+        SetupHandInteractors();
+        SetupInputControls();
     }
+
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+
+
+        CleanupInputControls();
+        CleanupHandInteractors();
+    }
+
+    private void OnDestroy()
+    {
+        CleanupInputControls();
+        CleanupHandInteractors();
+    }
+
+
+    private void SetupHandInteractors()
+    {
+        if (leftHandInteractor != null)
+        {
+            leftHandInteractor.selectEntered.AddListener(OnLeftHandSelect);
+            leftHandInteractor.selectExited.AddListener(OnLeftHandDeselect);
+        }
+
+        if (rightHandInteractor != null)
+        {
+            rightHandInteractor.selectEntered.AddListener(OnRightHandSelect);
+            rightHandInteractor.selectExited.AddListener(OnRightHandDeselect);
+        }
+    }
+
+    private void CleanupHandInteractors()
+    {
+        if (leftHandInteractor != null)
+        {
+            leftHandInteractor.selectEntered.RemoveListener(OnLeftHandSelect);
+            leftHandInteractor.selectExited.RemoveListener(OnLeftHandDeselect);
+        }
+
+        if (rightHandInteractor != null)
+        {
+            rightHandInteractor.selectEntered.RemoveListener(OnRightHandSelect);
+            rightHandInteractor.selectExited.RemoveListener(OnRightHandDeselect);
+        }
+    }
+
+    private void SetupInputControls()
+    {
+        Debug.Log("AA: SETupINPUT CONTROLS");
+        playerControls.Player.ClickB.performed += HideKnife;
+        playerControls.Enable();
+    }
+
+    private void CleanupInputControls()
+    {
+        if (playerControls != null)
+        {
+            playerControls.Player.ClickB.performed -= HideKnife;
+            playerControls.Disable();
+        }
+    }
+
+
 
     private void OnLeftHandSelect(SelectEnterEventArgs args)
     {
         leftHandItem = args.interactableObject.transform.gameObject;
-        Debug.Log("Left hand grabbed: " + leftHandItem.name);
-        if (rightHandItem.TryGetComponent<WeaponControllerMP>(out WeaponControllerMP weapon))
-        {
-            weapon.SetGrabbed(true);
-
-        }
+        Debug.Log($"Left hand grabbed: {leftHandItem.name}");
+        UpdateWeaponGrabbedState();
     }
 
     private void OnLeftHandDeselect(SelectExitEventArgs args)
     {
-        Debug.Log("Left hand released: " + (leftHandItem != null ? leftHandItem.name : "Nothing"));
-        if (rightHandItem.TryGetComponent<WeaponControllerMP>(out WeaponControllerMP weapon))
-        {
-            weapon.SetGrabbed(false);
-        }
+        Debug.Log($"Left hand released: {(leftHandItem != null ? leftHandItem.name : "Nothing")}");
         leftHandItem = null;
+        UpdateWeaponGrabbedState();
     }
 
     private void OnRightHandSelect(SelectEnterEventArgs args)
     {
         rightHandItem = args.interactableObject.transform.gameObject;
-        Debug.Log("Right hand grabbed: " + rightHandItem.name);
-        if (rightHandItem.TryGetComponent<WeaponControllerMP>(out WeaponControllerMP weapon))
-        {
-            weapon.SetGrabbed(true);
-
-        }
+        Debug.Log($"Right hand grabbed: {rightHandItem.name}");
+        UpdateWeaponGrabbedState();
     }
 
     private void OnRightHandDeselect(SelectExitEventArgs args)
     {
-        Debug.Log("Right hand released: " + (rightHandItem != null ? rightHandItem.name : "Nothing"));
-        if (rightHandItem.TryGetComponent<WeaponControllerMP>(out WeaponControllerMP weapon))
-        {
-            weapon.SetGrabbed(false);
-
-        }
+        Debug.Log($"Right hand released: {(rightHandItem != null ? rightHandItem.name : "Nothing")}");
         rightHandItem = null;
+        UpdateWeaponGrabbedState();
     }
 
-    public bool HasBodyPart()
-    {
-        if ((leftHandItem != null && leftHandItem.layer == LayerMask.NameToLayer("BodyParts")) || (rightHandItem != null && rightHandItem.layer == LayerMask.NameToLayer("BodyParts")))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private void OnEnable()
-    {
-        playerControls.Player.ClickB.performed += HideKnife;
-        playerControls.Enable();
-    }
-
-    private void OnDisable()
-    {
-        playerControls.Player.ClickB.performed -= HideKnife;
-        playerControls.Disable();
-    }
 
     private void HideKnife(InputAction.CallbackContext context)
     {
-        if (rightHandItem != null && rightHandItem.TryGetComponent<WeaponControllerMP>(out _))
-        {
-            weaponRight = rightHandItem;
-            rightHandItem.SetActive(false);
-            rightHandItem = null;
+        Debug.Log("AA: Hide KNIFE");
+        // Primero intenta con mano derecha
+        if (TryHideShowWeapon(ref rightHandItem, ref weaponRight, rightHandInteractor))
             return;
+
+        // Luego intenta con mano izquierda
+        if (TryHideShowWeapon(ref leftHandItem, ref weaponLeft, leftHandInteractor))
+            return;
+
+        Debug.Log("No hay arma que ocultar o mostrar");
+    }
+
+    private bool TryHideShowWeapon(ref GameObject handItem, ref GameObject storedWeapon, XRDirectInteractor handInteractor)
+    {
+        Debug.Log("AA: TRY HIDE SHOW WEAPON");
+        // Ocultar arma si está en mano
+        if (handItem != null && handItem.TryGetComponent<WeaponControllerMP>(out var grabbedWeapon))
+        {
+            Debug.Log("AA: TRY HIDE SHOW WEAPON 1");
+            storedWeapon = handItem;
+            grabbedWeapon.ToggleVisibilityServerRpc(false);
+            handItem = null;
+            return true;
         }
 
-        if (rightHandItem == null && weaponRight != null)
+        // Mostrar arma guardada si no hay nada en la mano
+        if (handItem == null && storedWeapon != null && storedWeapon.TryGetComponent<WeaponControllerMP>(out var storedWeaponController))
         {
-            weaponRight.transform.position = rightHandInteractor.transform.position;
-            weaponRight.SetActive(true);
-            StartCoroutine(ForceGrabWeapon(weaponRight, rightHandInteractor));
-            rightHandItem = weaponRight;
+            storedWeaponController.ToggleVisibilityServerRpc(true);
 
-            weaponRight = null;
-            return;
+            storedWeapon.transform.position = handInteractor.transform.position;
+            storedWeapon.transform.rotation = handInteractor.transform.rotation;
+
+            StartCoroutine(ForceGrabWeapon(storedWeapon, handInteractor));
+            handItem = storedWeapon;
+            storedWeapon = null;
+            return true;
         }
 
-        if (leftHandItem != null && leftHandItem.TryGetComponent<WeaponControllerMP>(out _))
-        {
-            weaponLeft = leftHandItem;
-            leftHandItem.SetActive(false);
-            leftHandItem = null;
-            return;
-        }
-
-        if (leftHandItem == null && weaponLeft != null)
-        {
-            weaponLeft.transform.position = leftHandInteractor.transform.position;
-            weaponLeft.SetActive(true);
-            StartCoroutine(ForceGrabWeapon(weaponLeft, leftHandInteractor));
-            leftHandItem = weaponLeft;
-
-            weaponLeft = null;
-            return;
-        }
-
+        return false;
     }
 
     private IEnumerator ForceGrabWeapon(GameObject weapon, XRDirectInteractor handInteractor)
     {
-        yield return null;
+        yield return new WaitForEndOfFrame();
 
-        var interactable = weapon.GetComponent<XRGrabInteractable>();
-        if (interactable != null)
+        if (weapon.TryGetComponent<XRGrabInteractable>(out var interactable) && handInteractor.interactionManager != null)
         {
             handInteractor.interactionManager.SelectEnter(handInteractor, interactable);
         }
         else
         {
-            Debug.LogWarning("El objeto no tiene un XRGrabInteractable.");
+            Debug.LogWarning("No se pudo forzar el agarre del arma.");
         }
     }
+
+
+    private void UpdateWeaponGrabbedState()
+    {
+        WeaponControllerMP weaponController = null;
+
+        if (rightHandItem != null && rightHandItem.TryGetComponent(out weaponController))
+        {
+            weaponController.SetGrabbedStateServerRpc(true);
+        }
+        else if (leftHandItem != null && leftHandItem.TryGetComponent(out weaponController))
+        {
+            weaponController.SetGrabbedStateServerRpc(true);
+        }
+    }
+
+
+
+    public bool HasBodyPart()
+    {
+        return (leftHandItem != null && leftHandItem.layer == LayerMask.NameToLayer("BodyParts")) ||
+               (rightHandItem != null && rightHandItem.layer == LayerMask.NameToLayer("BodyParts"));
+    }
+
+    public GameObject GetLeftHandItem() => leftHandItem;
+
+    public GameObject GetRightHandItem() => rightHandItem;
+
+    public bool HasWeaponInHand()
+    {
+        return (leftHandItem != null && leftHandItem.TryGetComponent<WeaponControllerMP>(out _)) ||
+               (rightHandItem != null && rightHandItem.TryGetComponent<WeaponControllerMP>(out _));
+    }
+
 }

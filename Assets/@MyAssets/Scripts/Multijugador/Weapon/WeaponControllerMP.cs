@@ -1,157 +1,209 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+
 
 public class WeaponControllerMP : NetworkBehaviour
 {
-    private Collider weaponCollider;
-    private SliceObject sliceObject;
-    private OrderController orderController;
-    public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(false);
-    private Dictionary<ClientController, bool> clientStates = new Dictionary<ClientController, bool>();
-
+    [Header("Weapon Stats")]
     public int durability = 10;
     public int maxDurability = 10;
-    public int repairCost = 50;
-    public int currentDurability;
-    public bool hasCut;
-
+    public int repairCost = 10;
     public Material knifeMaterial;
-    private Color maxDurabilityColor = Color.white;
-    private Color minDurabilityColor = new Color(217f / 255f, 173f / 255f, 155f / 255f);
 
-    void Start()
-    {
-        currentDurability = durability;
-        weaponCollider = GetComponent<Collider>();
-        sliceObject = GetComponent<SliceObject>();
-        orderController = FindObjectOfType<OrderController>();
+    [Header("Weapon State")]
+    public bool isSpawnedWeapon = false;
 
-        if (sliceObject != null)
-        {
-            sliceObject.OnCutMade.AddListener(OnCutDetected);
-        }
-        UpdateKnifeColor();
-    }
-    void UpdateKnifeColor()
+    // Estado de agarre sincronizado
+    public NetworkVariable<bool> isGrabbed = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner);
+
+    // Durabilidad sincronizada
+    public NetworkVariable<int> currentDurability = new NetworkVariable<int>(
+        10,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner);
+
+    // Componentes
+    private Renderer weaponRenderer;
+    private XRGrabInteractable grabInteractable;
+
+
+
+    public override void OnNetworkSpawn()
     {
-        if (knifeMaterial != null)
-        {
-            float t = (float)currentDurability / maxDurability;
-            knifeMaterial.color = Color.Lerp(minDurabilityColor, maxDurabilityColor, t);
-        }
-    }
-    public void setColliderTrigger(bool isTrigger)
-    {
-        if (!IsOwner) return;
-        weaponCollider.isTrigger = isTrigger;
+        base.OnNetworkSpawn();
+
+        weaponRenderer = GetComponent<Renderer>();
+        grabInteractable = GetComponent<XRGrabInteractable>();
 
         if (IsServer)
         {
-            isGrabbed.Value = isTrigger;
+            currentDurability.Value = durability;
+            isGrabbed.Value = false;
         }
-        else
+
+        // Suscribirse a eventos de red
+        currentDurability.OnValueChanged += OnDurabilityChanged;
+        isGrabbed.OnValueChanged += OnGrabbedChanged;
+
+        // Eventos locales de agarre (solo si es Owner)
+        if (IsOwner && grabInteractable != null)
         {
-            SetGrabbedServerRpc(isTrigger);
+            //grabInteractable.selectEntered.AddListener(OnWeaponGrabbed);
+            //grabInteractable.selectExited.AddListener(OnWeaponReleased);
         }
-    }
-    public void SetGrabbed(bool grabbed)
-    {
-        SetGrabbedServerRpc(grabbed);
-    }
-    [ServerRpc(RequireOwnership = false)]
-    public void SetGrabbedServerRpc(bool isTrigger)
-    {
-        isGrabbed.Value = isTrigger;
-        GetComponent<Collider>().isTrigger = isTrigger;
-        SetGrabbedClientRpc(isTrigger);
-    }
-    [ClientRpc]
-    public void SetGrabbedClientRpc(bool isTrigger)
-    {
-        GetComponent<Collider>().isTrigger = isTrigger;
+
+        UpdateWeaponAppearance();
     }
 
+    public override void OnNetworkDespawn()
+    {
+        base.OnNetworkDespawn();
+
+        currentDurability.OnValueChanged -= OnDurabilityChanged;
+        isGrabbed.OnValueChanged -= OnGrabbedChanged;
+
+        if (grabInteractable != null)
+        {
+            grabInteractable.selectEntered.RemoveListener(OnWeaponGrabbed);
+            grabInteractable.selectExited.RemoveListener(OnWeaponReleased);
+        }
+    }
+
+    private void OnValidate()
+    {
+        durability = Mathf.Clamp(durability, 0, maxDurability);
+    }
+
+
+
+    private void OnWeaponGrabbed(SelectEnterEventArgs args)
+    {
+        if (!IsOwner) return;
+        SetGrabbedStateServerRpc(true);
+        Debug.Log($" Weapon grabbed by client {OwnerClientId}");
+    }
+
+    private void OnWeaponReleased(SelectExitEventArgs args)
+    {
+        if (!IsOwner) return;
+        SetGrabbedStateServerRpc(false);
+        Debug.Log($"Weapon released by client {OwnerClientId}");
+    }
+
+
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetGrabbedStateServerRpc(bool grabbed)
+    {
+        isGrabbed.Value = grabbed;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetDurabilityServerRpc(int newDurability)
+    {
+        currentDurability.Value = Mathf.Clamp(newDurability, 0, maxDurability);
+
+        if (currentDurability.Value <= 0)
+            OnWeaponBrokenClientRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RepairWeaponServerRpc()
+    {
+        currentDurability.Value = maxDurability;
+        OnWeaponRepairedClientRpc();
+    }
+
+    [ClientRpc]
+    private void OnWeaponBrokenClientRpc()
+    {
+        Debug.Log("Weapon is broken!");
+        UpdateWeaponAppearance();
+    }
+
+    [ClientRpc]
+    private void OnWeaponRepairedClientRpc()
+    {
+        Debug.Log("Weapon has been repaired!");
+        UpdateWeaponAppearance();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ToggleVisibilityServerRpc(bool visible)
+    {
+        ToggleVisibilityClientRpc(visible);
+    }
+
+    [ClientRpc]
+    private void ToggleVisibilityClientRpc(bool visible)
+    {
+        Debug.Log($"Visibilidad cambiada a {(visible ? "ACTIVO" : "OCULTO")} en cliente {NetworkManager.Singleton.LocalClientId}");
+        gameObject.SetActive(visible);
+    }
+
+
+
+    private void OnDurabilityChanged(int previousValue, int newValue)
+    {
+        Debug.Log($"Durabilidad cambió de {previousValue} a {newValue}");
+        UpdateWeaponAppearance();
+    }
+
+    private void OnGrabbedChanged(bool previousValue, bool newValue)
+    {
+        Debug.Log($"Estado de agarre cambió de {previousValue} a {newValue}");
+        // Aquí puedes poner efectos de sonido, vibración, etc.
+    }
+
+
+
+    public void ReduceDurability(int amount = 1)
+    {
+        if (!IsServer) return;
+        int newDurability = Mathf.Max(0, currentDurability.Value - amount);
+        SetDurabilityServerRpc(newDurability);
+    }
 
     public void RepairKnife()
     {
-        if (currentDurability <= 0)
-        {
-            if (orderController.cash >= repairCost)
-            {
-                orderController.cash -= repairCost;
-                currentDurability = maxDurability;
-                sliceObject.enabled = true;
-                UpdateKnifeColor();
-                Debug.Log("El cuchillo ha sido reparado");
-            }
-            else
-            {
-                Debug.Log("No se dispone de suficiente dinero para reparar el arma");
-            }
-        }
+        if (!IsServer) return;
+        RepairWeaponServerRpc();
     }
-    private void DisableKnife()
+
+    public bool CanUse() => currentDurability.Value > 0;
+    public bool IsWeaponGrabbed() => isGrabbed.Value;
+    public int GetCurrentDurability() => currentDurability.Value;
+    public int GetMaxDurability() => maxDurability;
+    public int GetRepairCost() => repairCost;
+
+    public void SetColliderTrigger(bool isTrigger)
     {
-        if (sliceObject != null)
+        if (TryGetComponent(out Collider weaponCollider))
         {
-            sliceObject.enabled = false;
-            Debug.Log("El cuchillo está roto y ya no puede cortar");
+            weaponCollider.isTrigger = isTrigger;
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void UpdateWeaponAppearance()
     {
-        if (isGrabbed.Value)
-        {
-            ClientController client = other.GetComponent<ClientController>();
-            if (client != null)
-            {
-                ProcessClient(client);
-            }
+        if (weaponRenderer == null || knifeMaterial == null) return;
 
+        if (currentDurability.Value <= 0)
+        {
+            Color brokenColor = new Color(1f, 0f, 0f, 0.5f); // rojo con transparencia
+            weaponRenderer.material.color = brokenColor;
+        }
+        else
+        {
+            float durabilityPercent = (float)currentDurability.Value / maxDurability;
+            Color normalColor = Color.Lerp(Color.yellow, Color.white, durabilityPercent);
+            weaponRenderer.material.color = normalColor;
         }
     }
 
-    private void ProcessClient(ClientController client)
-    {
-        if (!clientStates.ContainsKey(client))
-        {
-            clientStates[client] = false;
-        }
-
-        if (currentDurability > 0 && !clientStates[client])
-        {
-            currentDurability--;
-            Debug.Log($"Cuchillo usado en cliente {client.name}. Durabilidad actual: {currentDurability}");
-            UpdateKnifeColor();
-            clientStates[client] = true;
-
-            if (currentDurability <= 0)
-            {
-                Debug.Log("El cuchillo se ha roto.");
-                DisableKnife();
-            }
-        }
-        else if (clientStates[client])
-        {
-            Debug.Log($"El cliente {client.name} ya ha sido procesado. No puedes atacarlo nuevamente.");
-        }
-    }
-
-    private void OnCutDetected()
-    {
-        if (currentDurability > 0)
-        {
-            currentDurability--;
-            UpdateKnifeColor();
-            Debug.Log("Corte detectado. Durabilidad actual: " + currentDurability);
-
-            if (currentDurability <= 0)
-            {
-                DisableKnife();
-            }
-        }
-    }
 }
