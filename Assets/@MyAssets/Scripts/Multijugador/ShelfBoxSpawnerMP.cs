@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using System.Collections;
 
 public class ShelfBoxSpawnerMP : NetworkBehaviour
 {
@@ -7,7 +8,7 @@ public class ShelfBoxSpawnerMP : NetworkBehaviour
     public GameObject boxPrefab;
     public GameObject boxLidPrefab;
 
-    private Vector3 offset = new Vector3(0, -0.2f, 0);
+    private Vector3 offset = new Vector3(0, 0f, 0);
     private float colliderCheckRadius = 0.1f;
 
     public LayerMask detectionLayer;
@@ -15,7 +16,16 @@ public class ShelfBoxSpawnerMP : NetworkBehaviour
 
     private void Start()
     {
-        if (IsServer && startBox) SpawnBoxes();
+        if (IsServer && startBox)
+        {
+            StartCoroutine(DelayedSpawn());
+        }
+    }
+
+    private IEnumerator DelayedSpawn()
+    {
+        yield return new WaitForSeconds(1f);
+        SpawnBoxes();
     }
 
     public void SpawnBoxes()

@@ -26,7 +26,6 @@ public class ClientControllerMP : PersonControllerMP
 
     protected override void Start()
     {
-        Debug.Log("Female: " + isFemale);
         buyProbability = 0.5f;
         foreach (Rigidbody rg in deadRigidbodies)
         {
@@ -36,7 +35,6 @@ public class ClientControllerMP : PersonControllerMP
         {
             collider.enabled = false;
         }
-        Debug.Log("Descripcion cliente: " + appearanceDescription);
         base.Start();
     }
 
@@ -168,50 +166,6 @@ public class ClientControllerMP : PersonControllerMP
             foreach (Rigidbody rb in deadRigidbodies)
             {
                 rb.AddForce(force, ForceMode.Impulse);
-            }
-
-            BodyPartController bodypartController = gameObject.AddComponent<BodyPartController>();
-            bodypartController.decayTime = 240;
-            if (skinMaterial.TryGetComponent<SkinnedMeshRenderer>(out SkinnedMeshRenderer skinrender))
-            {
-                if (bodypartController.materials == null)
-                {
-                    bodypartController.materials = new List<Material>();
-                }
-                if (skinrender.material != null)
-                {
-                    if (!bodypartController.materials.Contains(skinrender.material))
-                    {
-                        bodypartController.materials.Add(skinrender.material);
-                    }
-                }
-            }
-            foreach (GameObject clothesMaterial in clothesMaterials)
-            {
-                foreach (Transform child in clothesMaterial.transform)
-                {
-                    if (child.gameObject.activeSelf)
-                    {
-                        if (child.gameObject.TryGetComponent<SkinnedMeshRenderer>(out SkinnedMeshRenderer render))
-                        {
-                            if (bodypartController.materials == null)
-                            {
-                                bodypartController.materials = new List<Material>();
-                                Debug.Log("Inicializando la lista materials.");
-                            }
-                            if (render.material == null)
-                            {
-                                Debug.LogWarning($"El objeto {child.gameObject.name} tiene un SkinnedMeshRenderer pero no tiene un material asignado.");
-                                continue; // omite este objeto si no tiene un material
-                            }
-                            if (!bodypartController.materials.Contains(render.material))
-                            {
-                                Debug.Log($"Objeto: {child.gameObject.name}, Material: {render.material.name}");
-                                bodypartController.materials.Add(render.material);
-                            }
-                        }
-                    }
-                }
             }
 
             yield return new WaitForSeconds(2f);
