@@ -53,8 +53,8 @@ public class WeaponControllerMP : NetworkBehaviour
         // Eventos locales de agarre (solo si es Owner)
         if (IsOwner && grabInteractable != null)
         {
-            grabInteractable.selectEntered.AddListener(OnWeaponGrabbed);
-            grabInteractable.selectExited.AddListener(OnWeaponReleased);
+            //grabInteractable.selectEntered.AddListener(OnWeaponGrabbed);
+            //grabInteractable.selectExited.AddListener(OnWeaponReleased);
         }
 
         UpdateWeaponAppearance();

@@ -14,67 +14,18 @@ public class WeaponSpawnerMP : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
+        if (!IsServer) return;
+        for(int spawnIndex = 0;spawnIndex<2; spawnIndex++)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            StartCoroutine(SpawnInitialWeapons());
+            GameObject weapon = Instantiate(weaponPrefab, spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
+            weapon.GetComponent<NetworkObject>().Spawn();
         }
     }
 
-    public override void OnNetworkDespawn()
-    {
-        if (IsServer && NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-        }
-    }
-
-    private IEnumerator SpawnInitialWeapons()
-    {
-        yield return new WaitForSeconds(1f);
-
-        foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
-        {
-            SpawnWeaponForClient(client.ClientId);
-        }
-    }
-
-    private void OnClientConnected(ulong clientId)
-    {
-        if (IsServer)
-        {
-            StartCoroutine(SpawnWeaponDelayed(clientId));
-        }
-    }
 
     private IEnumerator SpawnWeaponDelayed(ulong clientId)
     {
         yield return new WaitForSeconds(0.5f);
-        SpawnWeaponForClient(clientId);
-    }
-
-    private void SpawnWeaponForClient(ulong clientId)
-    {
-        if (playerWeapons.ContainsKey(clientId))
-        {
-            return;
-        }
-
-        //(0 para server host, 1 para client)
-        int spawnIndex = NetworkManager.Singleton.IsServer && clientId == NetworkManager.Singleton.LocalClientId ? 0 : 1;
-
-        if (spawnIndex >= spawnPoints.Length)
-        {
-            Debug.LogError("No hay suficientes puntos de spawn configurados");
-            return;
-        }
-
-        GameObject weapon = Instantiate(weaponPrefab, spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
-        NetworkObject weaponNetObject = weapon.GetComponent<NetworkObject>();
-        weaponNetObject.SpawnWithOwnership(clientId);
-
-        playerWeapons[clientId] = weapon;
-        StartCoroutine(AssignWeaponToPlayer(weapon, clientId));
     }
 
     private IEnumerator AssignWeaponToPlayer(GameObject weapon, ulong clientId)

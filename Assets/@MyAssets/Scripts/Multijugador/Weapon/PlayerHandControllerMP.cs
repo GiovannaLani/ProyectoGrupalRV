@@ -32,8 +32,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if (!IsOwner) return;
-
+        Debug.Log("AA: on network spawn");
         SetupHandInteractors();
         SetupInputControls();
     }
@@ -42,7 +41,6 @@ public class PlayerHandControllerMP : NetworkBehaviour
     {
         base.OnNetworkDespawn();
 
-        if (!IsOwner) return;
 
         CleanupInputControls();
         CleanupHandInteractors();
@@ -87,6 +85,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
 
     private void SetupInputControls()
     {
+        Debug.Log("AA: SETupINPUT CONTROLS");
         playerControls.Player.ClickB.performed += HideKnife;
         playerControls.Enable();
     }
@@ -133,8 +132,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
 
     private void HideKnife(InputAction.CallbackContext context)
     {
-        if (!IsOwner) return;
-
+        Debug.Log("AA: Hide KNIFE");
         // Primero intenta con mano derecha
         if (TryHideShowWeapon(ref rightHandItem, ref weaponRight, rightHandInteractor))
             return;
@@ -148,9 +146,11 @@ public class PlayerHandControllerMP : NetworkBehaviour
 
     private bool TryHideShowWeapon(ref GameObject handItem, ref GameObject storedWeapon, XRDirectInteractor handInteractor)
     {
+        Debug.Log("AA: TRY HIDE SHOW WEAPON");
         // Ocultar arma si está en mano
         if (handItem != null && handItem.TryGetComponent<WeaponControllerMP>(out var grabbedWeapon))
         {
+        Debug.Log("AA: TRY HIDE SHOW WEAPON 1");
             storedWeapon = handItem;
             grabbedWeapon.ToggleVisibilityServerRpc(false);
             handItem = null;
