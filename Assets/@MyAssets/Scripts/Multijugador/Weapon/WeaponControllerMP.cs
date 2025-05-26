@@ -97,9 +97,7 @@ public class WeaponControllerMP : NetworkBehaviour
         Debug.Log($"Weapon released by client {OwnerClientId}");
     }
 
-    #endregion
 
-    #region Network RPCs
 
     [ServerRpc(RequireOwnership = false)]
     public void SetGrabbedStateServerRpc(bool grabbed)
@@ -150,9 +148,7 @@ public class WeaponControllerMP : NetworkBehaviour
         gameObject.SetActive(visible);
     }
 
-    #endregion
 
-    #region Network Variable Callbacks
 
     private void OnDurabilityChanged(int previousValue, int newValue)
     {
@@ -166,9 +162,7 @@ public class WeaponControllerMP : NetworkBehaviour
         // Aquí puedes poner efectos de sonido, vibración, etc.
     }
 
-    #endregion
 
-    #region Public Methods
 
     public void ReduceDurability(int amount = 1)
     {
@@ -188,10 +182,6 @@ public class WeaponControllerMP : NetworkBehaviour
     public int GetCurrentDurability() => currentDurability.Value;
     public int GetMaxDurability() => maxDurability;
     public int GetRepairCost() => repairCost;
-
-    #endregion
-
-    #region Collider and Visual Updates
 
     public void SetColliderTrigger(bool isTrigger)
     {
@@ -218,5 +208,4 @@ public class WeaponControllerMP : NetworkBehaviour
         }
     }
 
-    #endregion
 }

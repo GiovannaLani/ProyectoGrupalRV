@@ -22,7 +22,6 @@ public class PlayerHandControllerMP : NetworkBehaviour
     private GameObject weaponRight;
     private GameObject weaponLeft;
 
-    #region Unity Lifecycle
 
     private void Awake()
     {
@@ -55,10 +54,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
         CleanupHandInteractors();
     }
 
-    #endregion
-
-    #region Setup Methods
-
+ 
     private void SetupHandInteractors()
     {
         if (leftHandInteractor != null)
@@ -104,9 +100,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
         }
     }
 
-    #endregion
 
-    #region Interactor Event Handlers
 
     private void OnLeftHandSelect(SelectEnterEventArgs args)
     {
@@ -136,9 +130,6 @@ public class PlayerHandControllerMP : NetworkBehaviour
         UpdateWeaponGrabbedState();
     }
 
-    #endregion
-
-    #region Weapon Visibility / Input Handling
 
     private void HideKnife(InputAction.CallbackContext context)
     {
@@ -197,9 +188,6 @@ public class PlayerHandControllerMP : NetworkBehaviour
         }
     }
 
-    #endregion
-
-    #region Weapon State Update
 
     private void UpdateWeaponGrabbedState()
     {
@@ -215,9 +203,7 @@ public class PlayerHandControllerMP : NetworkBehaviour
         }
     }
 
-    #endregion
 
-    #region Public Utility Access
 
     public bool HasBodyPart()
     {
@@ -235,5 +221,4 @@ public class PlayerHandControllerMP : NetworkBehaviour
                (rightHandItem != null && rightHandItem.TryGetComponent<WeaponControllerMP>(out _));
     }
 
-    #endregion
 }
