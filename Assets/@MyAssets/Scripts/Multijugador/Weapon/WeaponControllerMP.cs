@@ -31,7 +31,7 @@ public class WeaponControllerMP : NetworkBehaviour
     private Renderer weaponRenderer;
     private XRGrabInteractable grabInteractable;
 
-    #region Unity Lifecycle
+
 
     public override void OnNetworkSpawn()
     {
@@ -79,9 +79,7 @@ public class WeaponControllerMP : NetworkBehaviour
         durability = Mathf.Clamp(durability, 0, maxDurability);
     }
 
-    #endregion
 
-    #region Interaction Events
 
     private void OnWeaponGrabbed(SelectEnterEventArgs args)
     {
