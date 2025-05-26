@@ -148,7 +148,7 @@ public class MafiaControllerMP : PersonControllerMP
         {
             transform.rotation = Quaternion.LookRotation(Vector3.forward);
             elapsedTime += Time.deltaTime;
-            slider.SetSliderValue(elapsedTime, waitTimeBuyPoint);
+            slider.UpdateSliderFromServer(elapsedTime, waitTimeBuyPoint);
             yield return null;
         }
         Debug.Log("x Me voy");
