@@ -1220,6 +1220,7 @@ GameObject:
   - component: {fileID: 4732366943926469504}
   - component: {fileID: -185458890943511359}
   - component: {fileID: 3041294283600789009}
+  - component: {fileID: 7102179696112433603}
   m_Layer: 0
   m_Name: Client
   m_TagString: Untagged
@@ -1806,7 +1807,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 957468581163429957}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a01a2103929d5884f80879829f4e637a, type: 3}
   m_Name: 
@@ -2362,7 +2363,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0901d01ff93dd9c48aaa76501b7b2e82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slider: {fileID: 6776835126546240778}
+  slider: {fileID: 0}
   isAlive: 1
   isReported: 0
   waitTime: 2
@@ -2462,6 +2463,20 @@ MonoBehaviour:
   - {fileID: 2787045816055399367}
   - {fileID: 5948756138624979355}
   - {fileID: 45022342116473620}
+--- !u!114 &7102179696112433603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957468581163429957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b57411f58c58e5f42a03df4dd2c3cdec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timerSlider: {fileID: 7151892023905880308}
+  sliderFill: {fileID: 1534392465506977992}
 --- !u!1 &963339885799123903
 GameObject:
   m_ObjectHideFlags: 0

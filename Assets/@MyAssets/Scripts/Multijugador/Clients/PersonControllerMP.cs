@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public abstract class PersonControllerMP : NetworkBehaviour
 {
-    public ClientTimerSlider slider;
+    public ClientTimerSliderMP slider;
     public bool isAlive = true;
     public bool isReported = false;
     public float waitTime = 2f;
@@ -34,6 +34,7 @@ public abstract class PersonControllerMP : NetworkBehaviour
     public AudioSource[] audioSource;
     public string appearanceDescription;
 
+
     protected virtual void Start()
     {
         audioSource = GetComponents<AudioSource>();
@@ -46,6 +47,19 @@ public abstract class PersonControllerMP : NetworkBehaviour
         if (!IsServer) return;
         StartCoroutine(EnterFromDoor());
     }
+
+    protected virtual void Awake()
+    {
+        if (slider == null)
+        {
+            slider = GetComponentInChildren<ClientTimerSliderMP>(true);
+            if (slider == null)
+            {
+                Debug.LogWarning($"{gameObject.name}: No se encontró el slider automáticamente en los hijos.");
+            }
+        }
+    }
+
 
     virtual protected IEnumerator EnterFromDoor()
     {
@@ -283,19 +297,22 @@ public abstract class PersonControllerMP : NetworkBehaviour
 
     protected virtual IEnumerator WaitAtBuyPoint()
     {
-        slider.SetActive(true);
+        if(IsServer)
+            slider.SetActiveClientRpc(true);
         float elapsedTime = 0f;
         while (elapsedTime < waitTimeBuyPoint && !served)
         {
             transform.rotation = Quaternion.LookRotation(Vector3.forward);
             elapsedTime += Time.deltaTime;
-            slider.SetSliderValue(elapsedTime, waitTimeBuyPoint);
+            if (IsServer)
+                slider.UpdateSliderFromServer(elapsedTime, waitTimeBuyPoint);
             yield return null;
         }
         Debug.Log("x Me voy");
         buyPointController.FreePoint();
         StartCoroutine(MoveToFinalPoint());
-        slider.SetActive(false);
+        if(IsServer)
+            slider.SetActiveClientRpc(true);
     }
 
     protected virtual IEnumerator MoveToBuyPoint()

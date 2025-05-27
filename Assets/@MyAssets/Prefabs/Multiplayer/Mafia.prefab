@@ -4853,6 +4853,7 @@ MonoBehaviour:
   - {fileID: 604892932604497879}
   gameObjectTag: Brazo
   client: {fileID: 0}
+  clientMP: {fileID: 0}
   boneNames:
   - Bone.008
   - Bone.012
@@ -7463,6 +7464,7 @@ GameObject:
   - component: {fileID: -7682076444352724768}
   - component: {fileID: 1266330182081421513}
   - component: {fileID: 260395854276201034}
+  - component: {fileID: 4461643206272980050}
   m_Layer: 0
   m_Name: Mafia
   m_TagString: Untagged
@@ -7522,7 +7524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1683605402
+  GlobalObjectIdHash: 230663558
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -7855,6 +7857,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 6269eb3a8378a8242b1a4afb004778d2, type: 3}
   - {fileID: 2800000, guid: 4a35a1bacc4f6ce43ba1e205018b24c2, type: 3}
   show_run: 1
+  characterParts: []
 --- !u!65 &4563897591715781652
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7996,7 +7999,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4368000783781150676}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a01a2103929d5884f80879829f4e637a, type: 3}
   m_Name: 
@@ -8552,7 +8555,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c663ab946bb05b544aaf79378e1491fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slider: {fileID: 8864871435929723196}
+  slider: {fileID: 0}
   isAlive: 1
   isReported: 0
   waitTime: 2
@@ -8566,6 +8569,20 @@ MonoBehaviour:
   orderDescription: 
   gun: {fileID: 7513281148552467141}
   player: {fileID: 0}
+--- !u!114 &4461643206272980050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4368000783781150676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b57411f58c58e5f42a03df4dd2c3cdec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timerSlider: {fileID: 1512196325203710280}
+  sliderFill: {fileID: 8951328054318878797}
 --- !u!1 &4579275148434877387
 GameObject:
   m_ObjectHideFlags: 0
@@ -8630,6 +8647,7 @@ MonoBehaviour:
   - {fileID: 1083624483413337542}
   gameObjectTag: Brazo
   client: {fileID: 0}
+  clientMP: {fileID: 0}
   boneNames:
   - Bone.007
   - Bone.011
@@ -9365,6 +9383,7 @@ MonoBehaviour:
   - {fileID: 248664634245957324}
   gameObjectTag: Pierna
   client: {fileID: 0}
+  clientMP: {fileID: 0}
   boneNames:
   - Bone.009
   - Bone.013
@@ -11752,6 +11771,7 @@ MonoBehaviour:
   - {fileID: 5968740169701380521}
   gameObjectTag: Cabeza
   client: {fileID: 0}
+  clientMP: {fileID: 0}
   boneNames:
   - Bone.002
   - Bone.004
@@ -12672,6 +12692,7 @@ MonoBehaviour:
   - {fileID: 3533963911110761661}
   gameObjectTag: Pierna
   client: {fileID: 0}
+  clientMP: {fileID: 0}
   boneNames:
   - Bone.005
   - Bone.010
