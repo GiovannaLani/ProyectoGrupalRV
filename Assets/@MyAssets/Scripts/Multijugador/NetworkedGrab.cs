@@ -30,11 +30,19 @@ public class NetworkedGrab : NetworkBehaviour
         ReleaseOwnershipRpc();
     }
 
+    [ClientRpc]
+    private void SetWeaponTriggerClientRpc(bool trigger)
+    {
+        gameObject.GetComponent<Collider>().isTrigger = trigger;
+    }
 
     [Rpc(SendTo.Server)]
     private void RequestOwnershipRpc(ulong clientID)
     {
-
+        if(gameObject.TryGetComponent<WeaponController>(out _))
+        {
+            SetWeaponTriggerClientRpc(true);
+        }
         isGrabbed.Value = true;
 
         if (socket != null)
@@ -50,6 +58,10 @@ public class NetworkedGrab : NetworkBehaviour
     [Rpc(SendTo.Server)]
     private void ReleaseOwnershipRpc()
     {
+        if (gameObject.TryGetComponent<WeaponController>(out _))
+        {
+            SetWeaponTriggerClientRpc(false);
+        }
         isGrabbed.Value = false;
         if (socket == null)
         {

@@ -37,10 +37,16 @@ public class InfoUIMP : NetworkBehaviour
 
     void Update()
     {
+        Debug.Log("INFO PANEL NULL?" + infoPanel == null);
+        Debug.Log("INFO PANEL ACTIVE? " + infoPanel.activeSelf);
         if (infoPanel != null && infoPanel.activeSelf)
         {
-            if (IsServer)
+            Debug.Log("host:" + IsHost + " IsServer " + IsServer + " isClient " + IsClient);
+            Debug.Log("MAFIA 01");
+            if (IsHost)
             {
+                Debug.Log("MAFIA 02");
+
                 UpdateMafiaInfo();
                 UpdateCashInfo();
                 UpdateBoxInfo();
@@ -51,14 +57,18 @@ public class InfoUIMP : NetworkBehaviour
 
     private void UpdateMafiaInfo()
     {
+                    Debug.Log("MAFIA: 1");
         if (clientManager.mafia != null)
         {
             currentMafia = clientManager.mafia.GetComponent<MafiaControllerMP>();
 
+                    Debug.Log("MAFIA: 2");
             if (currentMafia != null && !currentMafia.served)
             {
+                    Debug.Log("MAFIA: 3");
                 if (!descriptionText.text.Equals(currentMafia.AppearanceDescription) || !orderText.text.Equals(currentMafia.orderDescription))
                 {
+                    Debug.Log("MAFIA4: " + currentMafia.AppearanceDescription);
                     descriptionText.text = currentMafia.AppearanceDescription;
                     orderText.text = currentMafia.orderDescription;
                     UpdateMafiaInfoClientRpc(currentMafia.AppearanceDescription, currentMafia.orderDescription);
@@ -66,8 +76,10 @@ public class InfoUIMP : NetworkBehaviour
             }
             else
             {
+                    Debug.Log("MAFIA5: ");
                 if (!descriptionText.text.Equals("No hay mafioso presente") || !orderText.text.Equals("Sin pedido"))
                 {
+                    Debug.Log("MAFIA6: No hay mafioso presente");
                     descriptionText.text = "No hay mafioso presente";
                     orderText.text = "Sin pedido";
                     UpdateMafiaInfoClientRpc("No hay mafioso presente", "Sin pedido");
@@ -76,8 +88,10 @@ public class InfoUIMP : NetworkBehaviour
         }
         else
         {
+                    Debug.Log("MAFI75: ");
             if (!descriptionText.text.Equals("No hay mafioso presente") || !orderText.text.Equals("Sin pedido"))
             {
+                    Debug.Log("MAFIA8: No hay mafioso presente");
                 descriptionText.text = "No hay mafioso presente";
                 orderText.text = "Sin pedido";
                 UpdateMafiaInfoClientRpc("No hay mafioso presente", "Sin pedido");

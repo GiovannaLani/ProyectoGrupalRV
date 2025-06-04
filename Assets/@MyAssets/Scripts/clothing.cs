@@ -667,7 +667,8 @@ public class Clothing : MonoBehaviour
         mafiaController = GetComponent<MafiaController>();
         if (mafiaController != null)
         {
-            mafiaController.AppearanceDescription = description;  
+            mafiaController.AppearanceDescription = description;
+            Debug.Log("MAFIA DESCR: " + description);
             existingClientDescriptions.Add(description);
             OnMafiaAppearanceGenerated?.Invoke(description);
         }
